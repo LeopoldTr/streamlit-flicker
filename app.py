@@ -2,7 +2,9 @@ import streamlit as st
 import requests
 from datetime import datetime
 
-URL = "https://the-flicker2-wyqfoj2l7a-ew.a.run.app/"
+st.secrets["url"]
+URL = st.secrets["url"]
+
 
 # Page configuration
 st.set_page_config(page_title="Movie Recommendations", page_icon=":clapper:", layout="wide")
