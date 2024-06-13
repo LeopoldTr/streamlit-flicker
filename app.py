@@ -2,9 +2,8 @@ import streamlit as st
 import requests
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 from datetime import datetime
-from streamlit_searchbox import st_searchbox
+import numpy as np
 
 URL = "https://the-flicker4-wyqfoj2l7a-ew.a.run.app/"
 
@@ -54,7 +53,7 @@ st.markdown("""
         text-decoration: none;
     }
     a:hover {
-        text-decoration: underline.
+        text-decoration: underline;
     }
     .rating {
         display: flex;
@@ -62,43 +61,43 @@ st.markdown("""
         font-size: 1.5em;
         color: gold;
         margin-top: 10px;
-        margin-bottom: 10px.
+        margin-bottom: 10px;
     }
     .rating-text {
-        margin-left: 5px.
-        color: #e0e0e0.
+        margin-left: 5px;
+        color: #e0e0e0;
     }
     .votes {
-        font-size: 1em.
-        color: #e0e0e0.
-        margin-left: 10px.
+        font-size: 1em;
+        color: #e0e0e0;
+        margin-left: 10px;
     }
     .date {
-        display: flex.
-        align-items: center.
-        font-size: 1.2em.
-        color: #e0e0e0.
-        margin-top: 10px.
-        margin-bottom: 10px.
+        display: flex;
+        align-items: center;
+        font-size: 1.2em;
+        color: #e0e0e0;
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
     .date-icon {
-        margin-right: 5px.
-        color: #4CAF50.
+        margin-right: 5px;
+        color: #4CAF50;
     }
     .footer {
-        position: fixed.
-        bottom: 10px.
-        left: 50%.
-        transform: translateX(-50%).
-        color: red.
-        font-family: monospace.
-        font-size: 0.8em.
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: red;
+        font-family: monospace;
+        font-size: 0.8em;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # Display the custom logo using matplotlib
-st.markdown('<div class="title">The Flicker</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">Movie Recommendations</div>', unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("Options")
@@ -124,7 +123,6 @@ def display_date(date_str):
         <span>{formatted_date}</span>
     </div>
     """
-
 def sentimental_analysis_plot(sentiment_dict, title):
     sentiments = ['surprise', 'anger', 'joy', 'fear', 'sadness', 'love']
     values = [sentiment_dict[sentiment] for sentiment in sentiments]
@@ -174,36 +172,36 @@ def search_movies(query):
 if search_option == "Rating Prediction":
     st.markdown('<div class="header">Movie Rating Prediction</div>', unsafe_allow_html=True)
 
-    # Using streamlit-searchbox
-    selected_movie = st_searchbox(
-        search_movies,
-        key="searchbox_movie",
-        placeholder="Enter the movie name",
-    )
-    print(f"Search Movie :: {selected_movie}")
-    if selected_movie:
-        selected_movie_id = selected_movie['id_imdb']
+    # Input for movie name
+    query = st.text_input("Enter the movie name", placeholder="e.g., Inception")
+    if query:
         with st.spinner("Loading..."):
-            response = requests.get(f"{URL}movie/{selected_movie_id}/prediction")
-            if response.status_code == 200:
-                data = response.json()
-                rec = data[0] if isinstance(data, list) else data
+            search_results = search_movies(query)
+            options = [f"{res['title']} ({res['year']}) - {res['id_imdb']}" for res in search_results]
+            selected_movie = st.selectbox("This Movie  :", options)
 
-                imdb_link = f"https://www.imdb.com/title/{rec['movie_details']['imdb_id']}/"
-                st.markdown(f"[View on IMDB]({imdb_link})")
+            if selected_movie:
+                selected_movie_id = selected_movie.split('-')[-1].strip()
+                response = requests.get(f"{URL}movie/{selected_movie_id}/prediction")
+                if response.status_code == 200:
+                    data = response.json()
+                    rec = data[0] if isinstance(data, list) else data
 
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.write(f"**Predicted Rating:**")
-                    st.markdown(display_rating(round(rec['prediction'])), unsafe_allow_html=True)
-                    st.write(f"**Actual Rating:**")
-                    st.markdown(display_rating(rec['movie_details']['vote_average'], rec['movie_details']['vote_count']), unsafe_allow_html=True)
-                    st.write(f"**Overview:** {rec['movie_details']['overview']}")
-                    genres = ', '.join([genre['name'] for genre in rec['movie_details']['genres']])
-                    st.write(f"**Genres:** {genres}")
-                    st.markdown(display_date(rec['movie_details']['release_date']), unsafe_allow_html=True)
-                with col2:
-                    st.image(f"https://image.tmdb.org/t/p/w500{rec['movie_details']['poster_path']}", width=150)
+                    imdb_link = f"https://www.imdb.com/title/{rec['movie_details']['imdb_id']}/"
+                    st.markdown(f"[View on IMDB]({imdb_link})")
+
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.write(f"**Predicted Rating:**")
+                        st.markdown(display_rating(round(rec['prediction'])), unsafe_allow_html=True)
+                        st.write(f"**Actual Rating:**")
+                        st.markdown(display_rating(rec['movie_details']['vote_average'], rec['movie_details']['vote_count']), unsafe_allow_html=True)
+                        st.write(f"**Overview:** {rec['movie_details']['overview']}")
+                        genres = ', '.join([genre['name'] for genre in rec['movie_details']['genres']])
+                        st.write(f"**Genres:** {genres}")
+                        st.markdown(display_date(rec['movie_details']['release_date']), unsafe_allow_html=True)
+                    with col2:
+                        st.image(f"https://image.tmdb.org/t/p/w500{rec['movie_details']['poster_path']}", width=150)
 
                 # Plot sentimental analysis
                 col1,col2, col3 = st.columns([1, 1, 1])
